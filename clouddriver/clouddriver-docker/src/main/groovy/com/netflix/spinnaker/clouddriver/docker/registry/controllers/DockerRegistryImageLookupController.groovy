@@ -65,7 +65,7 @@ class DockerRegistryImageLookupController {
   }
 
   @RequestMapping(value = '/find', method = RequestMethod.GET)
-  @PostFilter("hasPermission(filterObject['account'], 'ACCOUNT', 'READ')")
+  // @PostFilter("hasPermission(filterObject['account'], 'ACCOUNT', 'READ')")
   List<Map> find(LookupOptions lookupOptions) {
     def account = lookupOptions.account ?: ""
 
