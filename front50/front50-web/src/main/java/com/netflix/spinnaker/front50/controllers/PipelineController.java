@@ -239,19 +239,34 @@ public class PipelineController {
           if (p1.getIndex() == null && p2.getIndex() != null) {
             return 1;
           }
-          if (p1.getIndex() != null
-              && p2.getIndex() != null
-              && !p1.getIndex().equals(p2.getIndex())) {
-            return p1.getIndex() - p2.getIndex();
+          if (p1.getIndex() != null && !p1.getIndex().equals(p2.getIndex())) {
+            int weight = p1.getIndex() > p2.getIndex() ? -1 : 1;
+            log.debug(
+                "Sorting pipelines: normal sort (weight: {}) for '{}'/{}  and '{}'/{}",
+                weight,
+                p1.getName(),
+                p1.getIndex(),
+                p2.getName(),
+                p2.getIndex());
+            return weight;
           }
-          return Optional.ofNullable(p1.getName())
-              .orElse(p1.getId())
-              .compareToIgnoreCase(Optional.ofNullable(p2.getName()).orElse(p2.getId()));
+          if (p1.getIndex() != null) {
+            log.debug("Sorting pipelines: p1 and p2 have same index of {}", p1.getIndex());
+          }
+          int weight =
+              Optional.ofNullable(p1.getName())
+                  .orElse(p1.getId())
+                  .compareToIgnoreCase(Optional.ofNullable(p2.getName()).orElse(p2.getId()));
+          log.debug("Sorting pipelines with equal index {}: returning {}", p1.getIndex(), weight);
+          return weight;
         });
 
     int i = 0;
     for (Pipeline p : pipelines) {
-      p.setIndex(i);
+      if (p.getIndex() == null) {
+        p.setIndex(i);
+        log.debug("Sorting pipelines: assigned index {} to pipeline {}", i, p);
+      }
       i++;
     }
 
