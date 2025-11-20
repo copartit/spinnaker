@@ -2,6 +2,7 @@ import React from 'react';
 
 import { ArtifactIconService } from '../../artifact';
 import type { IArtifact } from '../../domain';
+import { CopyToClipboard } from '../../utils';
 
 import './artifact.less';
 
@@ -32,9 +33,20 @@ export class Artifact extends React.Component<IArtifactProps> {
     return tooltipEntries.join('\n');
   }
 
+  private artifactDelimiter(artifact: IArtifact): string {
+    switch (artifact.type) {
+      case 'docker/image':
+        return ':';
+      default:
+        return ' - ';
+    }
+  }
+
   public render() {
     const { artifact, isDefault } = this.props;
     const { name, reference, version, type } = artifact;
+    const artifactName = `${name || reference}${this.artifactDelimiter(artifact)}${version || 'latest'}`;
+    const copyToClipboardText = this.artifactDelimiter(artifact) === ':' ? artifactName : '';
 
     return (
       <div className="artifact-details">
@@ -42,14 +54,22 @@ export class Artifact extends React.Component<IArtifactProps> {
           <div className="artifact-detail">
             <dt>
               {ArtifactIconService.getPath(type) ? (
-                <img className="artifact-icon" src={ArtifactIconService.getPath(type)} width="18" height="18" />
+                <img
+                  className="artifact-icon"
+                  alt={type}
+                  src={ArtifactIconService.getPath(type)}
+                  width="36"
+                  height="36"
+                />
               ) : (
                 <span>[{type}] </span>
               )}
             </dt>
             <dd>
-              <div className="artifact-name">{name || reference}</div>
-              {version && <div className="artifact-version"> - {version}</div>}
+              <pre>
+                {artifactName}
+                {copyToClipboardText && <CopyToClipboard text={copyToClipboardText} toolTip="Copy to clipboard" />}
+              </pre>
             </dd>
           </div>
         </dl>

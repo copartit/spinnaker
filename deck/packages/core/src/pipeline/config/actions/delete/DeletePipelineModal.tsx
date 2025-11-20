@@ -1,4 +1,4 @@
-import { get, isEmpty, set } from 'lodash';
+import { get } from 'lodash';
 import { $log } from 'ngimport';
 import React from 'react';
 import { Modal } from 'react-bootstrap';
@@ -27,22 +27,13 @@ export function DeletePipelineModal(props: IDeletePipelineModalProps) {
 
     PipelineConfigService.deletePipeline(application.name, pipeline, pipeline.name).then(
       () => {
-        const idsToUpdatedIndices = {};
+        // const idsToUpdatedIndices = {};
         const isPipelineStrategy = pipeline.strategy === true;
         const data = isPipelineStrategy ? application.strategyConfigs.data : application.pipelineConfigs.data;
         data.splice(
           data.findIndex((p: any) => p.id === pipeline.id),
           1,
         );
-        data.forEach((p: IPipeline, index: number) => {
-          if (p.index !== index) {
-            p.index = index;
-            set(idsToUpdatedIndices, p.id, index);
-          }
-        });
-        if (!isEmpty(idsToUpdatedIndices)) {
-          PipelineConfigService.reorderPipelines(application.name, idsToUpdatedIndices, isPipelineStrategy);
-        }
         ReactInjector.$state.go('^.executions', null, { location: 'replace' });
         closeModal();
       },
