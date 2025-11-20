@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
 COPY . workdir/
 
 WORKDIR workdir
-ENV GRADLE_OPTS -Xmx4g
 
 RUN GRADLE_USER_HOME=cache ./gradlew --no-daemon :${APP}:${APP}-web:installDist -x test
 

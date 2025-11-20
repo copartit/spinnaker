@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y openjdk-17-jdk && rm -rf /var/lib/apt/l
 COPY . workdir/
 
 WORKDIR workdir
-ENV GRADLE_OPTS -Xmx4g
 
 RUN GRADLE_USER_HOME=cache ./gradlew -Prelease.useLastTag=true :${APP}:${APP}-web:buildDeb -x test
 
