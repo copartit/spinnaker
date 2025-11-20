@@ -130,6 +130,11 @@
     <collapsible-section heading="Artifacts" expanded="true">
       <ul ng-repeat="artifact in ctrl.manifest.artifacts">
         <kubernetes-manifest-artifact artifact="artifact"></kubernetes-manifest-artifact>
+        <copy-to-clipboard
+          class="copy-to-clipboard copy-to-clipboard-sm"
+          text="artifact.reference"
+          tool-tip="'Copy to clipboard'"
+        ></copy-to-clipboard>
       </ul>
     </collapsible-section>
   </div>
