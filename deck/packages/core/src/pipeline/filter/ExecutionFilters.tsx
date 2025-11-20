@@ -208,17 +208,67 @@ export class ExecutionFilters extends React.Component<IExecutionFiltersProps, IE
     return PipelineConfigService.reorderPipelines(this.props.application.name, idsToUpdatedIndices, false);
   }
 
+  private setPipelineIndex(pipelineId: string, index: number) {
+    const { application } = this.props;
+    for (let i = 0; i < application.pipelineConfigs.data.length; i++) {
+      if (application.pipelineConfigs.data[i].id === pipelineId) {
+        application.pipelineConfigs.data[i].index = index;
+        break;
+      }
+    }
+  }
+
+  private getPipelineByName(name: string): IPipeline | null {
+    const { application } = this.props;
+    for (const p of application.pipelineConfigs.data) {
+      if (p.name === name) {
+        return p;
+      }
+    }
+    return null;
+  }
+
   // For ReactSortable
   private handleSortEnd = (sortEnd: SortEnd): void => {
+    if (sortEnd.oldIndex === sortEnd.newIndex) {
+      return;
+    }
     const pipelineNames = arrayMove(this.state.pipelineNames, sortEnd.oldIndex, sortEnd.newIndex);
-    this.applyNewPipelineSortOrder(pipelineNames);
+    this.setState({ pipelineNames: pipelineNames });
+    this.sortAsVisuallySeen(pipelineNames);
   };
 
   private sortAlphabetically = () => {
     const pipelineNames = this.state.pipelineNames.slice().sort();
-    this.applyNewPipelineSortOrder(pipelineNames);
+    this.setState({ pipelineNames: pipelineNames });
+    this.sortAsVisuallySeen(pipelineNames);
   };
 
+  private sortAsVisuallySeen(pipelineNames: string[]) {
+    const idsToUpdatedIndices: { [key: string]: number } = {};
+    let i = 0;
+    const indices: number[] = [];
+    this.props.application.pipelineConfigs.data.forEach((pipeline: IPipeline) => {
+      indices.push(pipeline.index);
+    });
+    for (const pName of pipelineNames) {
+      const pipeline = this.getPipelineByName(pName);
+      const toIndex = indices[i];
+      if (pipeline.index !== toIndex) {
+        idsToUpdatedIndices[pipeline.id] = toIndex;
+        this.setPipelineIndex(pipeline.id, toIndex);
+      }
+      i = i + 1;
+    }
+    if (!isEmpty(idsToUpdatedIndices)) {
+      this.updatePipelines(idsToUpdatedIndices).then(() => {
+        this.refreshPipelines();
+      });
+    }
+  }
+
+  // @ts-ignore
+  // noinspection JSUnusedLocalSymbols
   private applyNewPipelineSortOrder = (pipelineNames: string[]): void => {
     const { application } = this.props;
     logger.log({ category: 'Pipelines', action: 'Reordered pipeline' });
@@ -232,7 +282,7 @@ export class ExecutionFilters extends React.Component<IExecutionFiltersProps, IE
     });
 
     if (!isEmpty(idsToUpdatedIndices)) {
-      this.updatePipelines(idsToUpdatedIndices);
+      this.updatePipelines(idsToUpdatedIndices).then(() => {});
       this.refreshPipelines();
     }
   };

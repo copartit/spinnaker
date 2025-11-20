@@ -1,5 +1,5 @@
 import type { StateService } from '@uirouter/angularjs';
-import type { IController, IScope } from 'angular';
+import type { IController, IInterpolateService, IScope } from 'angular';
 import { module } from 'angular';
 import type { IModalService } from 'angular-ui-bootstrap';
 
@@ -20,14 +20,16 @@ class KubernetesLoadBalancerDetailsController implements IController {
   public state = { loading: true };
   public manifest: IManifest;
   public loadBalancer: IKubernetesLoadBalancer;
+  public internalDNSName: string;
 
-  public static $inject = ['$uibModal', '$state', '$scope', 'loadBalancer', 'app'];
+  public static $inject = ['$uibModal', '$state', '$scope', 'loadBalancer', 'app', '$interpolate'];
   constructor(
     private $uibModal: IModalService,
     private $state: StateService,
     private $scope: IScope,
     loadBalancer: ILoadBalancerFromStateParams,
     private app: Application,
+    private $interpolate: IInterpolateService,
   ) {
     const dataSource = this.app.getDataSource('loadBalancers');
     dataSource
@@ -80,6 +82,10 @@ class KubernetesLoadBalancerDetailsController implements IController {
     ManifestReader.getManifest(accountId, region, name).then((manifest: IManifest) => {
       this.manifest = manifest;
       this.loadBalancer = loadBalancer;
+      this.internalDNSName = this.$interpolate(
+        SETTINGS.providers.kubernetes.defaults.internalDNSNameTemplate ||
+          '{{displayName}}.{{namespace}}.svc.cluster.local',
+      )(this.loadBalancer);
       this.state.loading = false;
     });
   }

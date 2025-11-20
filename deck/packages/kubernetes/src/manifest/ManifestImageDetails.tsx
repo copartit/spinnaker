@@ -1,7 +1,7 @@
 import { has, sortBy } from 'lodash';
 import React from 'react';
 
-import { HelpField } from '@spinnaker/core';
+import { CopyToClipboard, HelpField } from '@spinnaker/core';
 
 export interface IContainer {
   name: string;
@@ -49,7 +49,8 @@ export const ManifestImageDetails = ({ manifest }: IManifestImageDetailsProps) =
       {containers.map((container) => (
         <li key={container.image} title={normalizeImage(container.image)} className="break-word">
           {normalizeImage(container.image)}{' '}
-          <HelpField content={`This is container <strong>${container.name}</strong>'s image.`} />
+          <CopyToClipboard text={normalizeImage(container.image)} toolTip="Copy to clipboard" />{' '}
+          <HelpField placement="left" content={`This is container <strong>${container.name}</strong>'s image.`} />
         </li>
       ))}
       {hasBothContainerTypes && <strong>Init Containers</strong>}

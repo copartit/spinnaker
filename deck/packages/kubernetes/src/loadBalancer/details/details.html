@@ -101,12 +101,22 @@
           </ul>
         </dd>
         <div ng-if="ctrl.loadBalancer.serverGroups.length">
-          <dt>Pod status</dt>
+          <dt>Pod Status</dt>
           <dd>
             <health-counts class="pull-left" container="ctrl.loadBalancer.instanceCounts"></health-counts>
           </dd>
         </div>
         <div ng-if="ctrl.manifest.manifest.spec.clusterIP">
+          <dt>DNS Name</dt>
+          <dd>
+            <a target="_blank" href="http://{{ctrl.internalDNSName}}"> {{ ctrl.internalDNSName }} </a>
+            <copy-to-clipboard
+              class="copy-to-clipboard copy-to-clipboard-sm"
+              text="ctrl.internalDNSName"
+              tool-tip="'Copy Internal DNS Name to clipboard'"
+            >
+            </copy-to-clipboard>
+          </dd>
           <dt>Cluster IP</dt>
           <dd>
             <a target="_blank" href="//{{ctrl.manifest.manifest.spec.clusterIP}}">
