@@ -42,6 +42,8 @@ RUN apt-get update && apt-get install -y curl gnupg && \
   git \
   openssh-client \
   unzip && \
+  apt-get clean && \
+  rm -rf /var/cache/apt/* /var/lib/apt/lists/* && \
   rm -rf ~/.config/gcloud
 
 # AWS CLI 2
