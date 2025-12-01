@@ -1,5 +1,24 @@
-FROM ubuntu:jammy
-LABEL maintainer="sig-platform@spinnaker.io"
+FROM ubuntu:jammy AS build
+LABEL org.opencontainers.image.authors="Igor Cherkaev <igor.cherkaev@copart.com>"
+ENV GRADLE_USER_HOME=/workspace/.gradle
+ENV GRADLE_OPTS="-Xmx12g -Xms12g"
+ARG APP
+
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY . workdir/
+
+WORKDIR workdir
+
+RUN GRADLE_USER_HOME=cache ./gradlew -PenableCrossCompilerPlugin=true --no-daemon :${APP}:${APP}-web:installDist -x test
+
+FROM ubuntu:jammy AS production
+LABEL org.opencontainers.image.authors="Igor Cherkaev <igor.cherkaev@copart.com>"
+
+ARG APP
+ARG DEBIAN_FRONTEND=noninteractive
 
 ENV KUSTOMIZE_VERSION=3.8.6
 ENV KUSTOMIZE4_VERSION=4.5.5
@@ -12,9 +31,11 @@ ARG PACKER_PLUGINS="amazon azure googlecompute"
 WORKDIR /packer
 
 RUN apt-get update && apt-get -y install openjdk-17-jre-headless wget unzip curl git openssh-client && \
-  wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_${TARGETARCH}.zip && \
-  unzip packer_${PACKER_VERSION}_linux_${TARGETARCH}.zip && \
-  rm packer_${PACKER_VERSION}_linux_${TARGETARCH}.zip
+    apt-get clean && \
+    rm -rf /var/cache/apt/* /var/lib/apt/lists/* && \
+    wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_${TARGETARCH}.zip && \
+    unzip packer_${PACKER_VERSION}_linux_${TARGETARCH}.zip && \
+    rm packer_${PACKER_VERSION}_linux_${TARGETARCH}.zip
 
 ENV PATH "/packer:$PATH"
 
@@ -64,10 +85,10 @@ RUN if [ "${TARGETARCH}" = "arm64" ]; then \
   rm session-manager-plugin.deb
 
 RUN adduser --system --uid 10111 --group spinnaker
-COPY rosco-web/build/install/rosco /opt/rosco
-COPY rosco-web/config              /opt/rosco
-COPY halconfig/packer              /opt/rosco/config/packer
-RUN mkdir -p /opt/rosco/plugins && chown -R spinnaker:nogroup /opt/rosco/plugins
+COPY --from=build /workdir/${APP}/${APP}-web/build/install/${APP} /opt/${APP}
+COPY --from=build /workdir/${APP}/${APP}-web/config /opt/${APP}
+COPY --from=build /workdir/${APP}/halconfig/packer /opt/${APP}/config/packer
+RUN mkdir -p /opt/${APP}/plugins && chown -R spinnaker:nogroup /opt/${APP}/plugins
 USER spinnaker
 
 # Install packer plugins (must be run as spinnaker user). To provide a github token (optional), run docker build with something like "--secret id=github_token,env=PACKER_GITHUB_API_TOKEN"
@@ -81,4 +102,4 @@ done
 
 HEALTHCHECK CMD curl http://localhost:8087/health | grep UP || exit 1
 
-CMD ["/opt/rosco/bin/rosco"]
+CMD ["/bin/bash", "-c", "/opt/rosco/bin/rosco"]
