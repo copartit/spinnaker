@@ -87,7 +87,7 @@ public abstract class AbstractDockerRegistryLookupController {
    * @return A list of images
    */
   @RequestMapping(value = "/find", method = RequestMethod.GET)
-  @PostFilter("hasPermission(filterObject['account'], 'ACCOUNT', 'READ')")
+  // @PostFilter("hasPermission(filterObject['account'], 'ACCOUNT', 'READ')")
   public List<Map<String, Object>> find(LookupOptions lookupOptions) {
     String account = lookupOptions.getAccount() != null ? lookupOptions.getAccount() : "";
 
