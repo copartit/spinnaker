@@ -25,7 +25,6 @@ import com.netflix.spinnaker.clouddriver.security.AccountCredentialsProvider;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -87,7 +86,7 @@ public abstract class AbstractDockerRegistryLookupController {
    * @return A list of images
    */
   @RequestMapping(value = "/find", method = RequestMethod.GET)
-  @PostFilter("hasPermission(filterObject['account'], 'ACCOUNT', 'READ')")
+  @PreAuthorize("hasPermission(#lookupOptions.account, 'ACCOUNT', 'READ')")
   public List<Map<String, Object>> find(LookupOptions lookupOptions) {
     String account = lookupOptions.getAccount() != null ? lookupOptions.getAccount() : "";
 
